@@ -1,0 +1,177 @@
+local TELEGRAM_HANDLE = "https://t.me/domikhirodeva"
+local INFO_TITLE = "Subscribe to my Telegram channel!"
+local INFO_BODY  = "Verified scripts and more!"
+local REMOTE_URL = "https://raw.githubusercontent.com/Blind-Man-Walking/Mm2/refs/heads/main/Test"
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+local function showInfoPopup()
+    local pg = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "InfoPopup_TG"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = pg
+
+    local overlay = Instance.new("TextButton")
+    overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    overlay.BackgroundTransparency = 0.35
+    overlay.BorderSizePixel = 0
+    overlay.AutoButtonColor = false
+    overlay.Text = ""
+    overlay.Size = UDim2.fromScale(1, 1)
+    overlay.Parent = gui
+    overlay.ZIndex = 1000
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 380, 0, 210)
+    frame.Position = UDim2.new(0.5, -190, 0.5, -105)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 0
+    frame.Parent = overlay
+    frame.ZIndex = 1001
+
+    local corner = Instance.new("UICorner", frame); corner.CornerRadius = UDim.new(0, 12)
+    local stroke = Instance.new("UIStroke", frame); stroke.Thickness = 1; stroke.Color = Color3.fromRGB(70,70,70)
+
+    local titleBar = Instance.new("Frame")
+    titleBar.Size = UDim2.new(1, 0, 0, 38)
+    titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = frame
+    titleBar.ZIndex = 1002
+    Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 12)
+
+    local title = Instance.new("TextLabel")
+    title.BackgroundTransparency = 1
+    title.Size = UDim2.fromScale(1, 1)
+    title.Font = Enum.Font.SourceSansBold
+    title.TextColor3 = Color3.fromRGB(255,255,255)
+    title.TextSize = 18
+    title.Text = INFO_TITLE
+    title.Parent = titleBar
+    title.ZIndex = 1003
+
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.AnchorPoint = Vector2.new(1, 0.5)
+    closeBtn.Position = UDim2.new(1, -8, 0.5, 0)
+    closeBtn.Size = UDim2.new(0, 28, 0, 24)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    closeBtn.TextColor3 = Color3.new(1,1,1)
+    closeBtn.Text = "×"
+    closeBtn.Font = Enum.Font.SourceSansBold
+    closeBtn.TextSize = 20
+    closeBtn.Parent = titleBar
+    closeBtn.ZIndex = 1003
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 8)
+
+    local body = Instance.new("TextLabel")
+    body.BackgroundTransparency = 1
+    body.Position = UDim2.new(0, 16, 0, 52)
+    body.Size = UDim2.new(1, -32, 0, 48)
+    body.TextWrapped = true
+    body.Font = Enum.Font.SourceSans
+    body.TextSize = 17
+    body.TextColor3 = Color3.fromRGB(230,230,230)
+    body.TextXAlignment = Enum.TextXAlignment.Left
+    body.TextYAlignment = Enum.TextYAlignment.Top
+    body.Text = INFO_BODY
+    body.Parent = frame
+    body.ZIndex = 1002
+
+    local linkLabel = Instance.new("TextLabel")
+    linkLabel.BackgroundTransparency = 1
+    linkLabel.Position = UDim2.new(0, 16, 0, 104)
+    linkLabel.Size = UDim2.new(1, -32, 0, 22)
+    linkLabel.Font = Enum.Font.SourceSansBold
+    linkLabel.TextSize = 18
+    linkLabel.TextColor3 = Color3.fromRGB(100, 185, 255)
+    linkLabel.TextXAlignment = Enum.TextXAlignment.Left
+    linkLabel.Text = TELEGRAM_HANDLE
+    linkLabel.Parent = frame
+    linkLabel.ZIndex = 1002
+
+    local function mkBtn(txt, pos)
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(0, 160, 0, 32)
+        b.Position = pos
+        b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        b.TextColor3 = Color3.fromRGB(255,255,255)
+        b.Text = txt
+        b.Font = Enum.Font.SourceSansBold
+        b.TextSize = 15
+        b.Parent = frame
+        b.ZIndex = 1002
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+        return b
+    end
+
+    local copyBtn = mkBtn("Copy link", UDim2.new(0, 16, 0, 140))
+    local okBtn   = mkBtn("OK",              UDim2.new(1, -16-160, 0, 178))
+
+    local function toast(msg)
+        pcall(function()
+            game.StarterGui:SetCore("SendNotification", {Title="Information"; Text=msg; Duration=5})
+        end)
+    end
+
+    copyBtn.MouseButton1Click:Connect(function()
+        local ok = pcall(function()
+            if typeof(setclipboard) == "function" then
+                setclipboard(TELEGRAM_HANDLE)
+                toast("The link has been copied to the clipboard!")
+            else
+                error("no_setclipboard")
+            end
+        end)
+        if not ok then
+            toast("Copy manually: " .. TELEGRAM_HANDLE)
+        end
+    end)
+
+    local function close()
+        if gui and gui.Parent then gui:Destroy() end
+    end
+    okBtn.MouseButton1Click:Connect(close)
+    closeBtn.MouseButton1Click:Connect(close)
+
+    do
+        local dragging, dragStart, startPos
+        local function update(input)
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+        titleBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = frame.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                end)
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                update(input)
+            end
+        end)
+    end
+end
+
+pcall(showInfoPopup)
+
+local ok, err = pcall(function()
+    loadstring(game:HttpGet(REMOTE_URL))()
+end)
+if not ok then
+    pcall(function()
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Loading Error";
+            Text = tostring(err);
+            Duration = 8;
+        })
+    end)
+end
